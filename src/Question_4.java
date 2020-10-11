@@ -44,7 +44,7 @@ public class Question_4 {
     }
 }
 
-class Solution {
+class Solution_4 {
     public double findMedianSortedArrays(int[] nums1, int[] nums2) {
         int length1 = nums1.length, length2 = nums2.length;
         int totalLength = length1 + length2;
