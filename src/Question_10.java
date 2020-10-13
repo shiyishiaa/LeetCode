@@ -1,4 +1,5 @@
 import java.util.ArrayDeque;
+import java.util.Stack;
 
 public class Question_10 {
     private static boolean priorTo(String before, String after) {
@@ -19,6 +20,7 @@ public class Question_10 {
         ArrayDeque<Character> pQueue = new ArrayDeque<>();
         for (Character k : p.toCharArray()) pQueue.add(k);
 
+        // Match trailing single characters.
         Character peekLast = pQueue.peekLast();
         if (peekLast == null) return false;
         while (!peekLast.equals('*')) {
@@ -31,114 +33,184 @@ public class Question_10 {
                 return sQueue.isEmpty();
         }
 
-        ArrayDeque<String> pSplit = new ArrayDeque<>();
+        Stack<String> pStack = new Stack<>();
 
-        all:
-        while (!pQueue.isEmpty()) {
-            Character poll = pQueue.poll();
-            if (poll == null) return false;
-            if (!poll.equals('*')) {
-                Character peek = pQueue.peek();
-                if (peek == null)
-                    if (!pQueue.isEmpty())
-                        return false;
-                    else {
-                        if (sQueue.size() != 1) return false;
-                        return sQueue.poll().equals(poll) || poll.equals('.');
-                    }
-                if (!peek.equals('*')) {
-                    // Pattern like (m)k/(m). To match "m".
-                    // The most plain condition.
-                    Character sPoll = sQueue.poll(); // Whatever the character s provides, we need to poll it out.
-                    if (!(poll.equals(sPoll) || poll.equals('.'))) return false;
-                } else {
-                    StringBuilder sbp = new StringBuilder(String.valueOf(poll));
-                    emptyQueue:
-                    do {
-                        poll = pQueue.poll();
-                        sbp.append(poll);
+        // Match patterns with priority.
+        while (!pQueue.isEmpty() || !sQueue.isEmpty()) {
+            if (pQueue.isEmpty()) {
+                if (pStack.peek().equals(".*")) return true;
+                Character toMatch = pStack.pop().charAt(0);
+                Character poll = sQueue.poll();
+                while (poll != null && poll.equals(toMatch)) {
+                    poll = sQueue.poll();
+                }
+                return sQueue.isEmpty();
+            }
 
-                        peek = pQueue.peek();
-                        if (peek == null)
-                            if (pQueue.isEmpty())
-                                if (sQueue.isEmpty())
-                                    break all;
-                                else
-                                    break;
-                            else return false;
+            if (sQueue.isEmpty()) return true;
 
-                        char beforeStar = sbp.charAt(sbp.length() - 2);
-                        if (peek.equals(beforeStar)) {
-                            do {
-                                poll = pQueue.poll();
-                                sbp.append(poll);
+            Character nowPoll = pQueue.poll();
+            assert nowPoll != null;
+            // Single star return false.
+            if (nowPoll.equals('*')) return false;
+            Character nowPeek = pQueue.peek();
+            // Trailing single characters have been matched at the start of this function.
+            assert nowPeek != null;
 
-                                peek = pQueue.peek();
-                                if (peek == null) break emptyQueue;
-                            } while (peek.equals(beforeStar));
-                        } else {
-                            // Pattern like (m*)k/(m*). To match "m*"
-                            Character sPeek = sQueue.peek();
-                            if (sPeek == null) return false;
-                            // m*==m{n}(n>0) Need to poll till next sPeek is not "m".
-                            char firstChar = sbp.charAt(0); // Refers to "m".
-                            if (sPeek.equals(firstChar)) {
-                                // String s is firstChar.
-                                do {
-                                    sQueue.poll();
-                                    sPeek = sQueue.peek();
-                                    if (sPeek == null) break;
-                                } while (sPeek.equals(firstChar));
-                                continue all;
-                            }
-                            // m*==m{0} Do not need to poll.
-                        }
-                    } while (peek.equals('*'));
-                    // 比较~4
-                    // Pattern like (m*mm*)k/(m*mm*). To match "m*mm*"
-                    StringBuilder sbs = new StringBuilder();
-                    Character sPeek = sQueue.peek();
-                    if (sPeek == null) return false;
-                    // m*==m{n}(n>0) Need to poll till next sPeek is not "m".
-                    char firstChar = sbp.charAt(0); // Refers to "m".
-                    String matchAll = "";
-                    if (firstChar == '.') {
-                        matchAll = sbp.toString();
+            // Pattern is "?*";
+            if (nowPeek.equals('*')) {
+                // Patterns like "?*" will be matched according to priority. (".*"<"m*")
+                StringBuilder nowPattern = new StringBuilder();
+                nowPattern.append(nowPoll).append(pQueue.poll());
+                // Store nowPattern if pattern stack is empty.
+                if (pStack.isEmpty()) {
+                    pStack.push(nowPattern.toString());
+                    continue;
+                }
+//
+//                Character afterPeek = pQueue.peek();
+//                if (afterPeek == null) {
+//                    // pQueue is empty.
+//                    // TODO Match StringBuilder "before" and the rest of sQueue.
+//                }
+//                // Single star return false.
+//                else if (afterPeek.equals('*')) return false;
+//                else if (afterPeek.equals('.')) {
+//                    Character afterPoll = pQueue.poll(); // .
+//                    assert afterPoll != null;
+//
+//                    afterPeek = pQueue.peek();
+//                    // Trailing single characters have been matched at the start of this function.
+//                    assert afterPeek != null;
+//
+//                    if (afterPeek.equals('*')) {
+//                        // After pattern is ".*"
+//                        // Push after to stack first due to its lowest priority.
+//                        String peekStack = pStack.peek();
+//                        // If before is "m*", start matching before pattern.
+//                        if (!peekStack.startsWith(".")) {
+//                            pStack.pop();
+//                            Character peekQueue = sQueue.peek();
+//                            if (peekQueue != null && peekQueue.equals(peekStack.charAt(0))) {
+//                                do {
+//                                    sQueue.poll();
+//                                    peekQueue = sQueue.peek();
+//                                } while (peekQueue != null && peekQueue.equals(peekStack.charAt(0)));
+//                            }
+//                        }
+//                        pStack.push(String.valueOf(afterPoll) + pQueue.poll());
+//                    } else {
+//                        // After pattern is "."
+//                        // Push before to stack first. ("?*" < ".")
+//                        pStack.push(nowPattern.toString());
+//                        pQueue.poll();
+//                        sQueue.poll();
+//                    }
+//                } else {
+//                    // TODO After pattern starts with "m".
+//                    Character afterPoll = pQueue.poll(); // m
+//                    assert afterPoll != null;
+//
+//                    afterPeek = pQueue.peek();
+//                    // Trailing single characters have been matched at the start of this function.
+//                    assert afterPeek != null;
+//
+//                    if (afterPeek.equals('*')) {
+//                        // After pattern is "m*".
+//
+//                    } else {
+//                        // After pattern is "m".
+//                        // Single character like "m" will be matched instantly due to their highest priority.
+//                        afterPoll = pQueue.poll();
+//                        assert afterPoll != null;
+//                        if (!afterPoll.equals(sQueue.poll())) return false;
+//
+//                        pStack.push(nowPattern.toString());
+//                    }
+//                }
+                String peekStack = pStack.peek();
+                // If before is "m*", remove all the same characters ("m") at the start of sQueue.
+                if (!peekStack.startsWith(".")) {
+                    pStack.pop();
+                    Character peekQueue = sQueue.peek();
+                    if (peekQueue != null && peekQueue.equals(peekStack.charAt(0))) {
                         do {
-                            pSplit.push(sbp.toString());
-                            sbp.replace(0, sbp.length(), "");
-                            sbp.append(pQueue.poll());
-                            sbp.append(pQueue.poll());
-                        } while (sbp.toString().equals(".*"));
-                    } else if (sPeek.equals(firstChar)) {
-                        // String s is firstChar.
-                        do {
-                            sbs.append(sQueue.poll());
-                            sPeek = sQueue.peek();
-                            if (sPeek == null) break;
-                        } while (sPeek.equals(firstChar));
-                        // m*mmm*m String s must have at least 3(sLeast) "m".
-                        String s1 = sbp.toString();
-                        int num = 0;
-                        for (int i = 0; i < s1.length(); i++)
-                            if (s1.charAt(i) == '*') num++;
-                        int sLeast = sbp.length() - 2 * num;
-                        if (sbs.length() < sLeast) return false;
-                    } else {
-                        // String s is not firstChar.
-                        do {
-                            sbp.replace(0, 2, "");
-                        } while (sbp.toString().startsWith(firstChar + "*"));
-                        if (sbp.length() != 0) return false;
+                            sQueue.poll();
+                            peekQueue = sQueue.peek();
+                        } while (peekQueue != null && peekQueue.equals(peekStack.charAt(0)));
                     }
                 }
-            } else return false;
+                // Push now pattern.
+                pStack.push(nowPattern.toString());
+                // If before is ".*", nowPattern is covered, for ".*.*m*" equals ".*".
+            }
+            // Whatever before is, "." will also be instantly matched.
+            else if (nowPoll.equals('.')) {
+                sQueue.poll();
+            }
+            // Single character like "m" will be matched instantly due to their highest priority.
+            else {
+                if (pStack.isEmpty())
+                    if (!nowPoll.equals(sQueue.poll()))
+                        return false;
+                    else
+                        continue;
+
+                String peekStack = pStack.peek();
+                // If before is ".*", remove all different characters.
+                if (peekStack.startsWith(".")) {
+                    Character sPeek = sQueue.peek();
+                    if (sPeek != null && !sPeek.equals(nowPoll)) {
+                        do {
+                            sQueue.poll();
+                            sPeek = sQueue.peek();
+                        } while (sPeek != null && !sPeek.equals(nowPoll));
+                    }
+                    pStack.pop();
+                    if (sQueue.isEmpty()) return false;
+                    sQueue.poll();
+                }
+                // If before is "m*", remove all the same characters ("m") at the start of sQueue.
+                else {
+                    pStack.pop();
+                    Character peekQueue = sQueue.peek();
+                    if (peekQueue != null && peekQueue.equals(peekStack.charAt(0))) {
+                        do {
+                            sQueue.poll();
+                            peekQueue = sQueue.peek();
+                        } while (peekQueue != null && peekQueue.equals(peekStack.charAt(0)));
+                    }
+                    // If nowPoll is not equivalent to "m".
+                    if (!nowPoll.equals(peekStack.charAt(0))) {
+                        if (!nowPoll.equals(sQueue.poll())) return false;
+                    } else {
+                        int minLength = 1;
+                        Character pSameChar = pQueue.peek();
+                        while (pSameChar != null && (pSameChar.equals('*') || pSameChar.equals(nowPoll))) {
+                            if (pSameChar.equals('*')) minLength--;
+                            else minLength++;
+                            pQueue.poll();
+                            pSameChar = pQueue.peek();
+                        }
+
+                        int realLength = 0;
+                        Character sSameChar = sQueue.peek();
+                        while (sSameChar != null && sSameChar.equals(peekStack.charAt(0))) {
+                            realLength++;
+                            sQueue.poll();
+                            sSameChar = sQueue.peek();
+                        }
+
+                        if (realLength < minLength) return false;
+                    }
+                }
+            }
         }
-        return sQueue.isEmpty() || !pSplit.isEmpty();
+        return true;
     }
 
     public static void main(String[] args) {
-        System.out.println(isMatch("a"
-                , ".*..a*"));
+        System.out.println(isMatch("att"
+                , "att*"));
     }
 }
