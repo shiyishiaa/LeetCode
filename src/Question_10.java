@@ -147,6 +147,10 @@ public class Question_10 {
     }
 }
 
+/**
+ * 动态规划
+ * @see <a href="https://leetcode-cn.com/problems/regular-expression-matching/solution/zheng-ze-biao-da-shi-pi-pei-by-leetcode-solution/">LeetCode 第十题</a>
+ */
 class Solution_10 {
     public static boolean isMatch(String s, String p) {
         int m = s.length();
