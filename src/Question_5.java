@@ -1,5 +1,5 @@
 public class Question_5 {
-    private static final boolean fail = true;
+    private static final boolean SUCCESS = false;
 
     public static boolean isPalindrome(String s) {
         for (int i = 0; i < s.length() / 2; i++)
