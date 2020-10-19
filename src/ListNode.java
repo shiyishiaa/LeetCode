@@ -29,7 +29,8 @@ public class ListNode {
         var sb = new StringBuilder();
         ListNode pointer = this;
         for (var i = 0; pointer != null; i++) {
-            sb.append("\t[").append(i).append("]:\t").append(pointer.val).append("\n");
+//            sb.append("\t[").append(i).append("]:\t").append(pointer.val).append("\n");
+            sb.append("[").append(pointer.val).append("] ");
             pointer = pointer.next;
         }
         return sb.toString();
