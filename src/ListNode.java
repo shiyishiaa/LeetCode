@@ -33,6 +33,7 @@ public class ListNode {
             sb.append("[").append(pointer.val).append("]->");
             pointer = pointer.next;
         }
+        sb.replace(sb.length() - 2, sb.length(), "");
         return sb.toString();
     }
 }
