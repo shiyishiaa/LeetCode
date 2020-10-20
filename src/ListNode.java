@@ -30,7 +30,7 @@ public class ListNode {
         ListNode pointer = this;
         for (var i = 0; pointer != null; i++) {
 //            sb.append("\t[").append(i).append("]:\t").append(pointer.val).append("\n");
-            sb.append("[").append(pointer.val).append("] ");
+            sb.append("[").append(pointer.val).append("]->");
             pointer = pointer.next;
         }
         return sb.toString();
