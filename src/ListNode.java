@@ -24,6 +24,16 @@ public class ListNode {
         return head;
     }
 
+    public ListNode getHead() {
+        return this;
+    }
+
+    public ListNode getEnd() {
+        ListNode p = this;
+        while (p.next != null) p = p.next;
+        return p;
+    }
+
     @Override
     public String toString() {
         var sb = new StringBuilder();
