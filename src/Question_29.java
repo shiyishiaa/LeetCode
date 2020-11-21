@@ -27,7 +27,6 @@ public class Question_29 {
     }
 
     public static void main(String[] args) {
-        System.out.println(divide(-2147483648
-                , -1));
+        System.out.println(divide(-2147483648, -1));
     }
 }
